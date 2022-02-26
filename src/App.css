@@ -17,10 +17,48 @@ em {
     width: 300px;
     height: 25px;
     margin: 5px;
-    border-radius: 14px;
+    border-radius: 20px;
     box-shadow: 0 1px 3px rgb(23 23 23 / 24%);
-    background: #303134;
+    background-color: #303134;
     border: none;
     padding: 5px 10px;
     color: white;
+}
+
+
+.toggle {
+    position: relative;
+    width: 120px;
+    height: 22px;
+    border-radius: 13px;
+    border: 2px solid #bdc1c6;
+}
+
+.toggle:after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 22px;
+    background-color: #bdc1c6;
+    top: 0;
+    left: 0;
+    transition: all 0.5s;
+    border-radius: 12px;
+}
+
+.toggle > p {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    position: absolute;
+    top: -13px;
+    right: 52px;
+    width: 60px;
+}
+
+.checkbox:checked + .toggle::after {
+    left: 60px;
+}
+
+.checkbox {
+    display: none;
 }

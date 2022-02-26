@@ -6,6 +6,7 @@ export interface ShopDocument {
     size: number
     updatedTime: Date
     tags: string[]
+    pageRank: number
 }
 
 export interface PageBody {

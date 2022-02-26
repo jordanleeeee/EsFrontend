@@ -29,19 +29,28 @@ function QueryResultDisplay(searchResponse: EsResponse) {
                     return (
                         <div key={entry._id}>
                             <div style={{display: "flex"}}>
-                                <div style={{alignSelf: "center", marginRight: "10px"}}>score: {entry._score.toFixed(4)}</div>
+                                <div style={{alignSelf: "center", marginRight: "10px"}}>
+                                    <div>score:</div>
+                                    <div>{entry._score.toFixed(4)}</div>
+                                </div>
                                 <div key={entry._id}>
                                     <div style={{fontSize: '16px', display: "flex"}}>
                                         {urlView(document.url)}
+                                    </div>
+                                    <div style={{margin: '5px 0'}}>
+                                        <a style={{fontSize: '24px', color: "#8ab4f8"}} href={document.url} target={"_blank"} rel="noreferrer">
+                                            {document.title}
+                                        </a>
+                                    </div>
+                                    <div>
                                         {
                                             document.updatedTime &&
-                                            <span style={{marginLeft: "10px"}}>updated at {document.updatedTime}</span>
+                                            <span style={{marginRight: "10px"}}>updated at {document.updatedTime}</span>
                                         }
+                                        <span style={{marginRight: "10px"}}>size: {document.size} byte</span>
+                                        <span>pageRank: {document.pageRank}</span>
                                     </div>
-                                    <a style={{fontSize: '24px', color: "#8ab4f8"}} href={document.url} target={"_blank"} rel="noreferrer">
-                                        {document.title}
-                                    </a>
-                                    <div style={{width: "50vw", fontSize: "18px", marginTop: "5px"}}>
+                                    <div style={{width: "50vw", fontSize: "14px", marginTop: "5px"}}>
                                         {
                                             entry?.highlight?.["body.content"] !== undefined ?
                                                 <div dangerouslySetInnerHTML={{__html: entry.highlight["body.content"][0]}}/> :

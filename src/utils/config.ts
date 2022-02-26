@@ -9,4 +9,4 @@ export const highlightConfig = {
         }
     }
 }
-export const returnedSource = ["url", "title", "updatedTime", "size", "body.content"]
+export const returnedSource = ["url", "title", "updatedTime", "size", "body.content", "pageRank"]

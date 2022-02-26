@@ -4,7 +4,7 @@ import './App.css';
 import {matchAllRequest, anyMatchRequest, weightedMatchRequest, matchByFieldRequest} from './utils/EsClient'
 import {EsResponse} from "./types/es";
 import QueryResultDisplay from "./component/QueryResultDisplay";
-import {SearchMode, DocumentContentPart, Pagination, MultiMatchType} from "./types/search";
+import {SearchMode, DocumentContentPart, Pagination, MultiMatchType, SortBy} from "./types/search";
 import {pageSize} from "./utils/config";
 
 function App() {
@@ -14,6 +14,9 @@ function App() {
     const [starbucksSelected, setStarbucksSelected] = useState<boolean>(false)
     const [searchResponse, setSearchResponse] = useState<EsResponse>()
     const [searchMode, setSearchMode] = useState<SearchMode>("MATCH_ALL")
+    const [isAsc, setIsAsc] = useState(false)
+    const [pageRankIncluded, setPageRankIncluded] = useState(false)
+    const [sortBy, setSortBy] = useState<SortBy>("_score")
     const [multiMatchType, setMultiMatchType] = useState<MultiMatchType>("best_fields")
     const [selectedField, setSelectedField] = useState<DocumentContentPart>("title")
     const [weight, setWeight] = useState<Record<DocumentContentPart, number>>({
@@ -41,19 +44,25 @@ function App() {
         let currentPagination = pagination
         currentPagination.currentPage = page
 
+        let sorting: any[] = []
+        let sort: { [x: string]: string } = {}
+        sort[sortBy] = isAsc ? "asc" : "desc"
+        sorting.push(sort)
+        if (sortBy !== "_score") sorting.push("_score")
+
         let response;
         switch (searchMode) {
             case "MATCH_ALL":
-                response = matchAllRequest<EsResponse>(url, currentPagination)
+                response = matchAllRequest<EsResponse>(url, currentPagination, sorting, pageRankIncluded)
                 break
             case "MATCH_ANY_FIELD_QUERY":
-                response = anyMatchRequest<EsResponse>(url, query, multiMatchType, currentPagination)
+                response = anyMatchRequest<EsResponse>(url, query, multiMatchType, currentPagination, sorting, pageRankIncluded)
                 break
             case "BOOSTED_QUERY":
-                response = weightedMatchRequest<EsResponse>(url, query, weight, currentPagination)
+                response = weightedMatchRequest<EsResponse>(url, query, weight, currentPagination, sorting, pageRankIncluded)
                 break
             case "MATCH_TARGETED_FIELD_QUERY":
-                response = matchByFieldRequest<EsResponse>(url, query, selectedField, currentPagination)
+                response = matchByFieldRequest<EsResponse>(url, query, selectedField, currentPagination, sorting, pageRankIncluded)
                 break
         }
         response.then(response => {
@@ -147,7 +156,7 @@ function App() {
         if (searchMode === 'MATCH_ANY_FIELD_QUERY') {
             return (
                 <>
-                    <label htmlFor="cars">Choose a match type:</label>
+                    <label>Choose a match type:</label>
                     <select style={{margin: '0 10px'}} onChange={event => setMultiMatchType(event.target.value as MultiMatchType)} value={multiMatchType}>
                         <option value="best_fields">best_fields</option>
                         <option value="most_fields">most_fields</option>
@@ -180,6 +189,39 @@ function App() {
         }
     }
 
+    function orderBySection() {
+        return (
+            <>
+                <div style={{marginLeft: "10px", borderLeft: "solid", padding: '10px'}}>order by:</div>
+                <select style={{margin: '0 10px', height: '25px'}} onChange={event => setSortBy(event.target.value as SortBy)} value={sortBy}>
+                    <option value="_score">score</option>
+                    <option value="updatedTime">updated time</option>
+                    <option value="size">page size</option>
+                </select>
+                <input type="checkbox" id="orderSwitch" className="checkbox"/>
+                <label htmlFor="orderSwitch" className="toggle" onClick={() => {
+                    setIsAsc(!isAsc)
+                }}>
+                    <p>&nbsp;ASC&nbsp;&nbsp;&nbsp;&nbsp;DESC</p>
+                </label>
+            </>
+        )
+    }
+
+    function pageRankIncludedSelectBox() {
+        return (
+            <>
+                <div style={{marginLeft: "10px", borderLeft: "solid", padding: '10px'}}>pageRank include:</div>
+                <input type="checkbox" id="pageRankSwitch" className="checkbox"/>
+                <label htmlFor="pageRankSwitch" className="toggle" onClick={() => {
+                    setPageRankIncluded(!pageRankIncluded)
+                }}>
+                    <p>&nbsp;&nbsp;Yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No</p>
+                </label>
+            </>
+        )
+    }
+
     return (
         <>
             <h1>Fast Food Shop Search Engine</h1>
@@ -209,18 +251,23 @@ function App() {
                             <label>matchParticularFieldQuery</label>
 
                             <input onChange={event => setSearchMode(event.target.value as SearchMode)} checked={searchMode === "MATCH_ANY_FIELD_QUERY"} name="mode" value="MATCH_ANY_FIELD_QUERY" type={"radio"}/>
-                            <label>matchAnyFieldQuery</label>
+                            <label>customMatchType</label>
 
                             <input onChange={event => setSearchMode(event.target.value as SearchMode)} checked={searchMode === "BOOSTED_QUERY"} name="mode" value="BOOSTED_QUERY" type={"radio"}/>
                             <label>boostedQuery</label>
                         </div>
 
                         <div style={{display: 'flex', alignItems: 'center', margin: '5px 0px'}}>
-                            {queryInputBox()}
                             {weightBox()}
                             {selectFieldBox()}
                             {multiMatchTypeSelectBox()}
-                            <button type='submit' style={{height: '30px'}}>search</button>
+                            {orderBySection()}
+                        </div>
+
+                        <div style={{display: 'flex', alignItems: 'center', margin: '5px 0px'}}>
+                            {queryInputBox()}
+                            <button type='submit' style={{height: '30px', marginLeft: "20px"}}>search</button>
+                            {pageRankIncludedSelectBox()}
                         </div>
                     </form>
                 </div>
