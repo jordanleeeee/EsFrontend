@@ -1,4 +1,5 @@
-export const elasticSearchUrl: string = "http://192.168.20.81:8443/"
+// export const elasticSearchUrl: string = "http://192.168.20.81:8443/"
+export const elasticSearchUrl: string = "http://www.jordanleeeee.com/"
 export const pageSize: number = 10
 export const highlightConfig = {
     fields: {
