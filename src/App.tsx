@@ -1,11 +1,12 @@
-import {useState} from 'react';
+import React, {useState} from 'react';
 import './App.css';
 
-import {matchAllRequest, anyMatchRequest, weightedMatchRequest, matchByFieldRequest} from './utils/EsClient'
+import {searchRequest} from './utils/EsClient'
 import {EsResponse} from "./types/es";
 import QueryResultDisplay from "./component/QueryResultDisplay";
 import {SearchMode, DocumentContentPart, Pagination, MultiMatchType, SortBy} from "./types/search";
 import {pageSize} from "./utils/config";
+import SearchBodyBuilder from "./utils/SearchBodyBuilder";
 
 function App() {
     const [query, setQuery] = useState<string>("")
@@ -16,6 +17,7 @@ function App() {
     const [searchMode, setSearchMode] = useState<SearchMode>("MATCH_ALL")
     const [isAsc, setIsAsc] = useState(false)
     const [pageRankIncluded, setPageRankIncluded] = useState(false)
+    const [autoCorrect, setAutoCorrect] = useState(false)
     const [sortBy, setSortBy] = useState<SortBy>("_score")
     const [multiMatchType, setMultiMatchType] = useState<MultiMatchType>("best_fields")
     const [selectedField, setSelectedField] = useState<DocumentContentPart>("title")
@@ -30,6 +32,8 @@ function App() {
         total: 0,
         currentPage: 1
     })
+    const [requestJsonStr, setRequestJsonStr] = useState("")
+    const [showRequestBody, setShowRequestBody] = useState(false)
 
     function search(page: number) {
         const shop: string[] = [];
@@ -44,30 +48,38 @@ function App() {
         let currentPagination = pagination
         currentPagination.currentPage = page
 
-        let sorting: any[] = []
-        let sort: { [x: string]: string } = {}
-        sort[sortBy] = isAsc ? "asc" : "desc"
-        sorting.push(sort)
-        if (sortBy !== "_score") sorting.push("_score")
-
-        let response;
-        switch (searchMode) {
-            case "MATCH_ALL":
-                response = matchAllRequest<EsResponse>(url, currentPagination, sorting, pageRankIncluded)
-                break
-            case "MATCH_ANY_FIELD_QUERY":
-                response = anyMatchRequest<EsResponse>(url, query, multiMatchType, currentPagination, sorting, pageRankIncluded)
-                break
-            case "BOOSTED_QUERY":
-                response = weightedMatchRequest<EsResponse>(url, query, weight, currentPagination, sorting, pageRankIncluded)
-                break
-            case "MATCH_TARGETED_FIELD_QUERY":
-                response = matchByFieldRequest<EsResponse>(url, query, selectedField, currentPagination, sorting, pageRankIncluded)
-                break
+        let searchBodyBuilder = new SearchBodyBuilder(searchMode, currentPagination)
+        if (searchMode === 'MATCH_TARGETED_FIELD_QUERY') {
+            searchBodyBuilder
+                .setQuery(query)
+                .setSelectedField(selectedField)
+                .setAllowTypo(autoCorrect)
+        } else if (searchMode === 'MATCH_ANY_FIELD_QUERY') {
+            searchBodyBuilder
+                .setQuery(query)
+                .setMultiMatchType(multiMatchType)
+            if (!(multiMatchType === 'phrase' || multiMatchType === 'phrase_prefix')) {
+                searchBodyBuilder.setAllowTypo(autoCorrect)
+            }
+        } else if (searchMode === 'BOOSTED_QUERY') {
+            searchBodyBuilder
+                .setQuery(query)
+                .setMultiMatchType('most_fields')
+                .setBoostSetting(weight)
+                .setAllowTypo(autoCorrect)
         }
+        let sortObj: { [x: string]: unknown } = {}
+        sortObj[sortBy] = isAsc ? "asc" : "desc"
+        searchBodyBuilder
+            .setIncludePageRank(pageRankIncluded)
+            .setSorting(sortObj)
+
+        var requsetBody = searchBodyBuilder.build();
+        let response = searchRequest<EsResponse>(url, requsetBody)
         response.then(response => {
             currentPagination.total = response.hits.total.value
             setPagination(currentPagination)
+            setRequestJsonStr(JSON.stringify(requsetBody, null, '   '))
             setSearchResponse(response)
         })
     }
@@ -91,6 +103,7 @@ function App() {
                 <div style={{display: 'flex', alignItems: "center"}}>
                     <div>weight of field:</div>
                     <table style={{margin: '0 10px'}}>
+                        <tbody>
                         <tr>
                             <td>title</td>
                             <td><input style={{width: "50px"}} type={"number"} onChange={content => {
@@ -111,6 +124,7 @@ function App() {
                                 setWeight({...weight, "body.content": content.target.value as unknown as number})
                             }} value={weight["body.content"]}/></td>
                         </tr>
+                        </tbody>
                     </table>
                 </div>
             )
@@ -123,6 +137,7 @@ function App() {
                 <div style={{display: 'flex', alignItems: "center"}}>
                     <div>select one field:</div>
                     <table style={{margin: '0 10px'}}>
+                        <tbody>
                         <tr>
                             <td><input onChange={event => setSelectedField(event.target.value as DocumentContentPart)} checked={selectedField === 'title'} name="field" value="title" type={"radio"}/></td>
                             <td>title</td>
@@ -135,6 +150,7 @@ function App() {
                             <td><input onChange={event => setSelectedField(event.target.value as DocumentContentPart)} checked={selectedField === 'body.content'} name="field" value="body.content" type={"radio"}/></td>
                             <td>content</td>
                         </tr>
+                        </tbody>
                     </table>
                 </div>
             )
@@ -222,10 +238,26 @@ function App() {
         )
     }
 
+    function queryCorrectionSelectBox() {
+        if (searchMode !== 'MATCH_ALL' &&
+            (!(searchMode === 'MATCH_ANY_FIELD_QUERY' && (multiMatchType === 'phrase_prefix' || multiMatchType === 'phrase')))) {
+            return (
+                <>
+                    <div style={{marginLeft: "10px", borderLeft: "solid", padding: '10px'}}>auto correction:</div>
+                    <input type="checkbox" id="typoSwitch" className="checkbox"/>
+                    <label htmlFor="typoSwitch" className="toggle" onClick={() => {
+                        setAutoCorrect(!autoCorrect)
+                    }}>
+                        <p>&nbsp;&nbsp;On&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Off</p>
+                    </label>
+                </>
+            )
+        }
+    }
+
     return (
         <>
             <h1>Fast Food Shop Search Engine</h1>
-
             <div style={{display: "flex", justifyContent: "space-between", alignContent: "baseline"}}>
                 <div>
                     <div style={{display: 'flex', margin: '5px 0px'}}>
@@ -268,6 +300,7 @@ function App() {
                             {queryInputBox()}
                             <button type='submit' style={{height: '30px', marginLeft: "20px"}}>search</button>
                             {pageRankIncludedSelectBox()}
+                            {queryCorrectionSelectBox()}
                         </div>
                     </form>
                 </div>
@@ -278,7 +311,15 @@ function App() {
 
             {
                 searchResponse !== undefined &&
-                <QueryResultDisplay took={searchResponse.took} timed_out={searchResponse.timed_out} hits={searchResponse.hits}/>
+                <>
+                    <div style={{position: "sticky", width: '100%'}}>
+                        {showRequestBody && <textarea style={{height: '400px', width: '100%'}} value={requestJsonStr} readOnly={true}/>}
+                        <button style={{alignSelf: "flex-end", position: "absolute", right: 0, height: '30px'}} onClick={() => setShowRequestBody(!showRequestBody)}>
+                            {showRequestBody ? "hide" : "request body"}
+                        </button>
+                    </div>
+                    <QueryResultDisplay took={searchResponse.took} timed_out={searchResponse.timed_out} hits={searchResponse.hits} jsonStr={JSON.stringify(requestJsonStr, null, '   ')}/>
+                </>
             }
         </>
     );
