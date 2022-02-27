@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="49ab5998-060c-45dd-bd32-4fc4d581e0f8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/component/QueryResultDisplay.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/component/QueryResultDisplay.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/document.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/document.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/search.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/search.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/EsClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/EsClient.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +64,7 @@
       <workItem from="1645533713414" duration="37000" />
       <workItem from="1645533770199" duration="96000" />
       <workItem from="1645533900771" duration="4009000" />
-      <workItem from="1645614314683" duration="53703000" />
+      <workItem from="1645614314683" duration="54832000" />
     </task>
     <servers />
   </component>
