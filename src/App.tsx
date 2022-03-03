@@ -257,7 +257,10 @@ function App() {
 
     return (
         <>
-            <h1>Fast Food Shop Search Engine</h1>
+            <div style={{display: "flex", alignItems: "flex-end"}}>
+                <h1>Fast Food Shop Search Engine</h1>
+                <h4 style={{marginLeft: "10px"}}>powered by Elasticsearch</h4>
+            </div>
             <div style={{display: "flex", justifyContent: "space-between", alignContent: "baseline"}}>
                 <div>
                     <div style={{display: 'flex', margin: '5px 0px'}}>

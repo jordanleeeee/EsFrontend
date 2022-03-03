@@ -1,5 +1,6 @@
-// export const elasticSearchUrl: string = "http://192.168.20.81:8443/"
-export const elasticSearchUrl: string = "http://www.jordanleeeee.com/"
+// export const elasticSearchUrl: string = "http://127.0.0.1:9200/"
+// export const elasticSearchUrl: string = "http://127.0.0.1:8443/ajax/"
+export const elasticSearchUrl: string = "http://www.jordanleeeee.com/ajax/"
 export const pageSize: number = 10
 export const highlightConfig = {
     fields: {

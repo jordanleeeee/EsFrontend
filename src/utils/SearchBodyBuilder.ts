@@ -34,10 +34,10 @@ export default class SearchBodyBuilder {
         }
 
         this.sorting = [];
+        this.sorting.push(sort)
         if (!sort._score) {
-            this.sorting.push(sort)
+            this.sorting.push("_score")
         }
-        this.sorting.push("_score")
         return this
     }
 
