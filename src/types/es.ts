@@ -4,8 +4,9 @@ export interface EsResponse {
     took: number
     timed_out: boolean
     hits: Hits
-    [x: string]: unknown;
+    [x: string]: unknown
 }
+
 
 export interface Hits {
     total: {value: number, relation: string}
@@ -23,5 +24,24 @@ export interface HitDetails {
 
 export interface Highlight {
     "body.content": string[]
+}
+
+
+export interface EsAggrResponse extends EsResponse {
+    aggregations: MyCustomAggr
+}
+
+export interface MyCustomAggr {
+    my_custom_aggregation: Buckets
+}
+
+export interface Buckets {
+    buckets: Bucket[]
+}
+
+export interface Bucket {
+    key_as_string: string,
+    key: string,
+    doc_count: number
 }
 
