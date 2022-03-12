@@ -1,14 +1,13 @@
 import magnifier from "../image/magnifier.png"
 import aggregate from "../image/aggregate.png"
+import Header from "./Header";
+import React from "react";
 
 function HomePage() {
 
     return (
         <>
-            <div style={{display: "flex", alignItems: "flex-end"}}>
-                <h1>Fast Food Shop Search Engine</h1>
-                <h4 style={{marginLeft: "10px"}}>powered by Elasticsearch</h4>
-            </div>
+            <Header/>
             <div style={{display: "flex", justifyContent: "space-around", marginTop: "15vh"}}>
                 <div style={{display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer"}}
                      onClick={() => {

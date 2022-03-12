@@ -6,6 +6,7 @@ import {pageSize} from "../utils/config";
 import SearchBodyBuilder from "../utils/SearchBodyBuilder";
 import {searchRequest, suggestCompletionRequest, suggestPhraseRequest, suggestTermRequest} from "../utils/EsClient";
 import QueryResultDisplay from "./QueryResultDisplay";
+import Header from "./Header";
 
 function SearchPage() {
     const [query, setQuery] = useState<string>("")
@@ -49,6 +50,7 @@ function SearchPage() {
     }
 
     function search(page: number) {
+        if (searchMode !== 'MATCH_ALL' && !query) return
         let currentPagination = pagination
         currentPagination.currentPage = page
 
@@ -163,7 +165,7 @@ function SearchPage() {
     }
 
     function suggest(query: string) {
-        const shop: string[] = [];
+        // const shop: string[] = [];
         // suggestPhraseRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
         // suggestPhraseRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
         suggestCompletionRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
@@ -238,6 +240,7 @@ function SearchPage() {
                     <option value="_score">score</option>
                     <option value="updatedTime">updated time</option>
                     <option value="size">page size</option>
+                    <option value="pageRank.numeric">page rank</option>
                 </select>
                 <input type="checkbox" id="orderSwitch" className="checkbox"/>
                 <label htmlFor="orderSwitch" className="toggle" onClick={() => {
@@ -282,10 +285,7 @@ function SearchPage() {
 
     return (
         <>
-            <div style={{display: "flex", alignItems: "flex-end"}}>
-                <h1>Fast Food Shop Search Engine</h1>
-                <h4 style={{marginLeft: "10px"}}>powered by Elasticsearch</h4>
-            </div>
+            <Header/>
             <div style={{display: "flex", justifyContent: "space-between", alignContent: "baseline"}}>
                 <div>
                     <div style={{display: 'flex', margin: '5px 0px'}}>

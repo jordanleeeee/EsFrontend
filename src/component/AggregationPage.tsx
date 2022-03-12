@@ -2,8 +2,9 @@ import {AgChartsReact} from 'ag-charts-react';
 
 import {aggregateRequest} from "../utils/EsClient";
 import {Bucket, EsAggrResponse} from "../types/es";
-import {useState} from "react";
+import React, {useState} from "react";
 import {AggrType, Interval} from "../types/aggregate";
+import Header from "./Header";
 
 function AggregationPage() {
     let [dateHistogramData, setDateHistogramData] = useState<Bucket[]>([])
@@ -55,10 +56,7 @@ function AggregationPage() {
 
     return (
         <>
-            <div style={{display: "flex", alignItems: "flex-end"}}>
-                <h1>Fast Food Shop Search Engine</h1>
-                <h4 style={{marginLeft: "10px"}}>powered by Elasticsearch</h4>
-            </div>
+            <Header/>
             <h2>last modification time histogram</h2>
 
             <form onSubmit={event => {
