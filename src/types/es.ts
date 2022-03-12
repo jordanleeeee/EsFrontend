@@ -45,3 +45,22 @@ export interface Bucket {
     doc_count: number
 }
 
+export interface EsSuggestResponse extends EsResponse {
+    suggest: MyCustomSuggest
+}
+
+export interface MyCustomSuggest {
+    my_custom_suggest: Suggestion[]
+}
+
+export interface Suggestion {
+    text: string
+    offset: number
+    length: number
+    options: Option[]
+}
+
+export interface Option {
+    text: string
+    score: number
+}

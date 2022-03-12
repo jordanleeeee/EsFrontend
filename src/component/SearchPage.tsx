@@ -1,13 +1,15 @@
-import {useState} from "react";
+import React, {useState} from "react";
+
 import {EsResponse} from "../types/es";
 import {DocumentContentPart, MultiMatchType, Pagination, SearchMode, SortBy} from "../types/search";
 import {pageSize} from "../utils/config";
 import SearchBodyBuilder from "../utils/SearchBodyBuilder";
-import {searchRequest} from "../utils/EsClient";
+import {searchRequest, suggestPhraseRequest, suggestTermRequest} from "../utils/EsClient";
 import QueryResultDisplay from "./QueryResultDisplay";
 
 function SearchPage() {
     const [query, setQuery] = useState<string>("")
+    const [suggestions, setSuggestions] = useState<string[]>([])
     const [mcdonaldsSelected, setMcdonaldsSelected] = useState<boolean>(false)
     const [subwaySelected, setSubwaySelected] = useState<boolean>(false)
     const [starbucksSelected, setStarbucksSelected] = useState<boolean>(false)
@@ -79,6 +81,7 @@ function SearchPage() {
             setPagination(currentPagination)
             setRequestJsonStr(JSON.stringify(requestBody, null, '   '))
             setSearchResponse(response)
+            setSuggestions([])
         })
     }
 
@@ -155,12 +158,35 @@ function SearchPage() {
         }
     }
 
+    function suggest(query: string) {
+        const shop: string[] = [];
+        if (mcdonaldsSelected) shop.push("mcdonalds")
+        if (subwaySelected) shop.push("subway")
+        if (starbucksSelected) shop.push("starbucks")
+
+        let url = "";
+        if (shop.length > 0) url = shop.join(",") + "/"
+        url += "_search"
+        // suggestPhraseRequest(url, query).then(suggest => setSuggestions(suggest))
+        suggestTermRequest(url, query).then(suggest => setSuggestions(suggest))
+    }
+
     function queryInputBox() {
         if (searchMode !== 'MATCH_ALL') {
             return (
                 <>
                     <div>your query:</div>
-                    <input id="queryBox" type={"text"} onChange={content => setQuery(content.target.value)}/>
+                    <div style={{display:"flex", flexDirection: "column", justifyContent: "end", position:"relative"}}>
+                        <input id="queryBox" type={"text"} onChange={content => {
+                            setQuery(content.target.value)
+                            suggest(content.target.value)
+                        }} list={"suggestions"} autoComplete={"off"} />
+                        <ul id="querySuggestBox" style={{width: "-webkit-fill-available"}}>
+                            {
+                                suggestions.map(suggest => <li key={suggest} style={{listStyleType:"none", padding: "5px 0"}}>{suggest}</li>)
+                            }
+                        </ul>
+                    </div>
                 </>
             )
         }
