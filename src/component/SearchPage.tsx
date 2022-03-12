@@ -4,12 +4,13 @@ import {EsResponse} from "../types/es";
 import {DocumentContentPart, MultiMatchType, Pagination, SearchMode, SortBy} from "../types/search";
 import {pageSize} from "../utils/config";
 import SearchBodyBuilder from "../utils/SearchBodyBuilder";
-import {searchRequest, suggestPhraseRequest, suggestTermRequest} from "../utils/EsClient";
+import {searchRequest, suggestCompletionRequest, suggestPhraseRequest, suggestTermRequest} from "../utils/EsClient";
 import QueryResultDisplay from "./QueryResultDisplay";
 
 function SearchPage() {
     const [query, setQuery] = useState<string>("")
     const [suggestions, setSuggestions] = useState<string[]>([])
+    const [showSuggestion, setShowSuggestion] = useState(false)
     const [mcdonaldsSelected, setMcdonaldsSelected] = useState<boolean>(false)
     const [subwaySelected, setSubwaySelected] = useState<boolean>(false)
     const [starbucksSelected, setStarbucksSelected] = useState<boolean>(false)
@@ -35,7 +36,7 @@ function SearchPage() {
     const [requestJsonStr, setRequestJsonStr] = useState("")
     const [showRequestBody, setShowRequestBody] = useState(false)
 
-    function search(page: number) {
+    function toSearchUrl(): string {
         const shop: string[] = [];
         if (mcdonaldsSelected) shop.push("mcdonalds")
         if (subwaySelected) shop.push("subway")
@@ -44,7 +45,10 @@ function SearchPage() {
         let url = "";
         if (shop.length > 0) url = shop.join(",") + "/"
         url += "_search"
+        return url
+    }
 
+    function search(page: number) {
         let currentPagination = pagination
         currentPagination.currentPage = page
 
@@ -75,7 +79,7 @@ function SearchPage() {
             .setSorting(sortObj)
 
         const requestBody = searchBodyBuilder.build();
-        let response = searchRequest<EsResponse>(url, requestBody)
+        let response = searchRequest<EsResponse>(toSearchUrl(), requestBody)
         response.then(response => {
             currentPagination.total = response.hits.total.value
             setPagination(currentPagination)
@@ -160,15 +164,9 @@ function SearchPage() {
 
     function suggest(query: string) {
         const shop: string[] = [];
-        if (mcdonaldsSelected) shop.push("mcdonalds")
-        if (subwaySelected) shop.push("subway")
-        if (starbucksSelected) shop.push("starbucks")
-
-        let url = "";
-        if (shop.length > 0) url = shop.join(",") + "/"
-        url += "_search"
-        // suggestPhraseRequest(url, query).then(suggest => setSuggestions(suggest))
-        suggestTermRequest(url, query).then(suggest => setSuggestions(suggest))
+        // suggestPhraseRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
+        // suggestPhraseRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
+        suggestCompletionRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
     }
 
     function queryInputBox() {
@@ -176,16 +174,19 @@ function SearchPage() {
             return (
                 <>
                     <div>your query:</div>
-                    <div style={{display:"flex", flexDirection: "column", justifyContent: "end", position:"relative"}}>
+                    <div style={{display: "flex", flexDirection: "column", justifyContent: "end", position: "relative"}}>
                         <input id="queryBox" type={"text"} onChange={content => {
                             setQuery(content.target.value)
                             suggest(content.target.value)
-                        }} list={"suggestions"} autoComplete={"off"} />
-                        <ul id="querySuggestBox" style={{width: "-webkit-fill-available"}}>
-                            {
-                                suggestions.map(suggest => <li key={suggest} style={{listStyleType:"none", padding: "5px 0"}}>{suggest}</li>)
-                            }
-                        </ul>
+                        }} onFocus={() => setShowSuggestion(true)} onBlur={() => setShowSuggestion(false)} list={"suggestions"} autoComplete={"off"}/>
+                        {
+                            showSuggestion &&
+                            <ul id="querySuggestBox" style={{width: "-webkit-fill-available"}}>
+                                {
+                                    suggestions.map(suggest => <li key={suggest} style={{listStyleType: "none", padding: "5px 0"}}>{suggest}</li>)
+                                }
+                            </ul>
+                        }
                     </div>
                 </>
             )
