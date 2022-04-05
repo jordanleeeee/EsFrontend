@@ -37,16 +37,13 @@ function SearchPage() {
     const [requestJsonStr, setRequestJsonStr] = useState("")
     const [showRequestBody, setShowRequestBody] = useState(false)
 
-    function toSearchUrl(): string {
-        const shop: string[] = [];
-        if (mcdonaldsSelected) shop.push("mcdonalds")
-        if (subwaySelected) shop.push("subway")
-        if (starbucksSelected) shop.push("starbucks")
+    function targetedShops(): string[] {
+        const shops: string[] = [];
+        if (mcdonaldsSelected) shops.push("mcdonalds")
+        if (subwaySelected) shops.push("subway")
+        if (starbucksSelected) shops.push("starbucks")
 
-        let url = "";
-        if (shop.length > 0) url = shop.join(",") + "/"
-        url += "_search"
-        return url
+        return shops
     }
 
     function search(page: number) {
@@ -55,6 +52,7 @@ function SearchPage() {
         currentPagination.currentPage = page
 
         let searchBodyBuilder = new SearchBodyBuilder(searchMode, currentPagination)
+        searchBodyBuilder.setShops(targetedShops())
         if (searchMode === 'MATCH_TARGETED_FIELD_QUERY') {
             searchBodyBuilder
                 .setQuery(query)
@@ -73,7 +71,12 @@ function SearchPage() {
                 .setMultiMatchType('most_fields')
                 .setBoostSetting(weight)
                 .setAllowTypo(autoCorrect)
+        } else if (searchMode === 'WILDCARD_QUERY') {
+            searchBodyBuilder
+                .setQuery(query)
+                .setSelectedField(selectedField)
         }
+
         let sortObj: { [x: string]: unknown } = {}
         sortObj[sortBy] = isAsc ? "asc" : "desc"
         searchBodyBuilder
@@ -81,7 +84,7 @@ function SearchPage() {
             .setSorting(sortObj)
 
         const requestBody = searchBodyBuilder.build();
-        let response = searchRequest<EsResponse>(toSearchUrl(), requestBody)
+        let response = searchRequest<EsResponse>("restaurant/_search/", requestBody)
         response.then(response => {
             currentPagination.total = response.hits.total.value
             setPagination(currentPagination)
@@ -139,7 +142,7 @@ function SearchPage() {
     }
 
     function selectFieldBox() {
-        if (searchMode === 'MATCH_TARGETED_FIELD_QUERY') {
+        if (searchMode === 'MATCH_TARGETED_FIELD_QUERY' || searchMode === 'WILDCARD_QUERY') {
             return (
                 <div style={{display: 'flex', alignItems: "center"}}>
                     <div>select one field:</div>
@@ -168,7 +171,7 @@ function SearchPage() {
         // const shop: string[] = [];
         // suggestPhraseRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
         // suggestPhraseRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
-        suggestCompletionRequest(toSearchUrl(), query).then(suggest => setSuggestions(suggest))
+        suggestCompletionRequest("restaurant/_search/", query).then(suggest => setSuggestions(suggest))
     }
 
     function queryInputBox() {
@@ -267,7 +270,7 @@ function SearchPage() {
     }
 
     function queryCorrectionSelectBox() {
-        if (searchMode !== 'MATCH_ALL' &&
+        if (searchMode !== 'MATCH_ALL' && searchMode !== 'WILDCARD_QUERY' &&
             (!(searchMode === 'MATCH_ANY_FIELD_QUERY' && (multiMatchType === 'phrase_prefix' || multiMatchType === 'phrase')))) {
             return (
                 <>
@@ -315,6 +318,9 @@ function SearchPage() {
 
                             <input onChange={event => setSearchMode(event.target.value as SearchMode)} checked={searchMode === "BOOSTED_QUERY"} name="mode" value="BOOSTED_QUERY" type={"radio"}/>
                             <label>boostedQuery</label>
+
+                            <input onChange={event => setSearchMode(event.target.value as SearchMode)} checked={searchMode === "WILDCARD_QUERY"} name="mode" value="WILDCARD_QUERY" type={"radio"}/>
+                            <label>wildCardQuery</label>
                         </div>
 
                         <div style={{display: 'flex', alignItems: 'center', margin: '5px 0px'}}>
