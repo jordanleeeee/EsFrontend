@@ -33,7 +33,7 @@ function AggregationPage() {
                 }
             }
         }
-        const response = aggregateRequest<EsAggrResponse>("_search", body);
+        const response = aggregateRequest<EsAggrResponse>("restaurant/_search", body);
         response.then(response => {
             setDateHistogramData(response.aggregations.my_custom_aggregation.buckets)
         })
@@ -48,7 +48,7 @@ function AggregationPage() {
                 }
             }
         }
-        const response = aggregateRequest<EsAggrResponse>("_search", body);
+        const response = aggregateRequest<EsAggrResponse>("restaurant/_search", body);
         response.then(response => {
             setByteHistogramData(response.aggregations.my_custom_aggregation.buckets)
         })
